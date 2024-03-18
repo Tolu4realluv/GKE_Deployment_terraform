@@ -1,4 +1,3 @@
-# GCP APi
 resource "google_project_service" "compute" {
   service = "compute.googleapis.com"
 }
@@ -7,7 +6,6 @@ resource "google_project_service" "container" {
   service = "container.googleapis.com"
 }
 
-# VPC network
 resource "google_compute_network" "vpc" {
   name                    = "gke-vpc"
   auto_create_subnetworks = "false"
@@ -18,7 +16,6 @@ resource "google_compute_network" "vpc" {
     ]
 }
 
-# private subnet
 resource "google_compute_subnetwork" "private_subnet" {
   name                     = "gke-private-subnet"
   region                   = "europe-west2"
@@ -27,14 +24,12 @@ resource "google_compute_subnetwork" "private_subnet" {
   ip_cidr_range            = "10.0.0.0/16"
 }
 
-# cloud router
 resource "google_compute_router" "router" {
   name         = "gke-vpc-router"
   region       = "europe-west2"
   network      = google_compute_network.vpc.name
 }
 
-#static IP
 resource "google_compute_address" "address" {
   name         = "gke-nat-static-ip"
   address_type = "EXTERNAL"
@@ -45,7 +40,6 @@ locals {
   private_subnets_names = [google_compute_subnetwork.private_subnet.id]
 }
 
-# cloud nat
 resource "google_compute_router_nat" "mist_nat" {
   name                               = "gke-vpc-nat-gateway"
   router                             = google_compute_router.router.name
@@ -63,7 +57,6 @@ resource "google_compute_router_nat" "mist_nat" {
   }
 }
 
-#GKE control plane
 resource "google_container_cluster" "primary" {
   name                      = "gke-cluster"
   location                  = "europe-west2"
@@ -121,7 +114,6 @@ resource "google_container_cluster" "primary" {
 
 }
 
-# kubernetes node pool service account
 resource "google_service_account" "gke-prod" {
   account_id   = "gke-cluster-service-account"
   display_name = "gke-cluster-service-account"
@@ -145,7 +137,6 @@ resource "google_project_iam_member" "resourceMetadata-write" {
   project = "gke-project"
 }
 
-# kubernetes node pool
 resource "google_container_node_pool" "primary_nodes" {
   name       = "gke-cluster-primary-nodepool"
   location   = "europe-west2"
